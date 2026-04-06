@@ -1,0 +1,144 @@
+<%- include("../partials/header") %>
+
+<div class="profile-page">
+  <div class="section-header">
+    <h1>My Profile</h1>
+  </div>
+
+  <div class="profile-layout">
+
+    <!-- Edit Profile -->
+    <div class="event-action-card">
+      <h2 style="margin-bottom:1.25rem;">Profile Information</h2>
+
+      <% if (profileErrors && profileErrors.length > 0) { %>
+        <div class="flash flash-error" style="margin-bottom:1rem;">
+          <ul style="margin:0;padding-left:1.25rem;">
+            <% profileErrors.forEach(msg => { %>
+              <li><%= msg %></li>
+            <% }) %>
+          </ul>
+        </div>
+      <% } %>
+
+      <form action="/profile/update" method="POST">
+        <div class="form-group">
+          <label for="name">Username</label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value="<%= profileFormData ? profileFormData.name : user.name %>"
+            required
+          >
+          <small class="form-hint">2–50 characters, must be unique.</small>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value="<%= profileFormData ? profileFormData.email : user.email %>"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="phone">Phone Number</label>
+          <div style="display:flex;align-items:center;gap:0.5rem;">
+            <span style="font-size:0.95rem;color:#6f7287;white-space:nowrap;">+65</span>
+            <input
+              type="text"
+              id="phone"
+              name="phone"
+              value="<%= profileFormData ? profileFormData.phone : (user.phone || '') %>"
+              placeholder="8-digit local number"
+              maxlength="8"
+              style="flex:1;"
+              required
+            >
+          </div>
+          <small class="form-hint">8 digits, Singapore number (no country code).</small>
+        </div>
+
+        <div class="form-group">
+          <label for="about">About <span style="color:#6f7287;font-weight:400;">(optional)</span></label>
+          <textarea
+            id="about"
+            name="about"
+            rows="4"
+            maxlength="300"
+            placeholder="Tell others a little about yourself..."
+            style="resize:vertical;"
+          ><%= profileFormData ? profileFormData.about : (user.about || '') %></textarea>
+          <small class="form-hint">Max 300 characters. Shown to attendees on your event pages.</small>
+        </div>
+
+        <button type="submit" class="btn-primary" style="width:100%;">Save Changes</button>
+      </form>
+    </div>
+
+    <!-- Change Password -->
+    <div class="event-action-card">
+      <h2 style="margin-bottom:1.25rem;">Change Password</h2>
+
+      <form action="/profile/password" method="POST">
+        <div class="form-group">
+          <label for="oldPassword">Current Password</label>
+          <input type="password" id="oldPassword" name="oldPassword" required>
+        </div>
+
+        <div class="form-group">
+          <label for="newPassword">New Password</label>
+          <input
+            type="password"
+            id="newPassword"
+            name="newPassword"
+            placeholder="At least 8 characters, 1 number"
+            required
+          >
+          <small class="form-hint">Min 8 characters, must contain at least one number.</small>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirm New Password</label>
+          <input type="password" id="confirmPassword" name="confirmPassword" required>
+        </div>
+
+        <button type="submit" class="btn-primary" style="width:100%;">Update Password</button>
+      </form>
+    </div>
+
+    <!-- Danger Zone (delete account) -->
+    <div class="event-action-card" style="border:1.5px solid #fca5a5;">
+      <h2 style="color:#dc2626;margin-bottom:0.5rem;">Danger Zone</h2>
+      <p style="font-size:0.875rem;color:#6f7287;margin-bottom:1rem;">
+        Deleting your account is <strong>permanent and cannot be undone</strong>.
+        Here is what will happen:
+      </p>
+      <ul style="font-size:0.85rem;color:#6f7287;margin-bottom:1.25rem;padding-left:1.25rem;line-height:1.7;">
+        <li>Your upcoming and ongoing events will be <strong>deleted</strong>, freeing all RSVPs.</li>
+        <li>Your past events will remain visible but show <strong>Deleted User</strong> as organiser.</li>
+        <li>Your RSVPs to upcoming events will be cancelled (waitlist auto-promoted).</li>
+        <li>All your favourites and to-do items will be deleted.</li>
+      </ul>
+
+      <form
+        action="/profile/delete"
+        method="POST"
+        onsubmit="return confirm('This will permanently delete your account. Are you absolutely sure?');"
+      >
+        <div class="form-group">
+          <label for="deletePassword">Confirm with your current password</label>
+          <input type="password" id="deletePassword" name="password" required placeholder="Your current password">
+        </div>
+        <button type="submit" class="btn-danger" style="width:100%;">Delete My Account</button>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<%- include("../partials/footer") %>

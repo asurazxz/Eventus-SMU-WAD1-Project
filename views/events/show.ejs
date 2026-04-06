@@ -1,0 +1,227 @@
+<%- include("../partials/header") %>
+
+<div class="event-detail">
+
+  <div class="event-detail-banner">
+    <span class="badge badge-orange"><%= event.category %></span>
+    <h1><%= event.title %></h1>
+    <div class="event-detail-banner-meta">
+      <%= new Date(event.startDate).toLocaleString("en-SG", { weekday:"short", day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" }) %>
+      &nbsp;&mdash;&nbsp;
+      <%= new Date(event.endDate).toLocaleString("en-SG", { weekday:"short", day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" }) %>
+      &nbsp;&bull;&nbsp;
+      <%= event.venue %>
+    </div>
+  </div>
+
+  <div class="event-detail-layout">
+
+    <div class="event-detail-main">
+      <h2>About this event</h2>
+      <p><%= event.description %></p>
+
+      <div class="organizer-section">
+        <h2>About the organizer</h2>
+        <p class="organizer-name"><%= event.owner?.name || "Deleted User" %></p>
+        <% if (event.owner?.about) { %>
+          <p class="organizer-bio"><%= event.owner.about %></p>
+        <% } %>
+        <% if (event.owner?.email || event.owner?.phone) { %>
+          <p class="organizer-contact-label">Contact</p>
+          <% if (event.owner?.email) { %>
+            <p class="organizer-contact"><a href="mailto:<%= event.owner.email %>"><%= event.owner.email %></a></p>
+          <% } %>
+          <% if (event.owner?.phone) { %>
+            <p class="organizer-contact">+65 <%= event.owner.phone %></p>
+          <% } %>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="event-detail-sidebar">
+      <div class="event-action-card">
+
+        <div class="detail-row">
+          <span class="detail-label">Date &amp; Time</span>
+          <span class="detail-value"><%= new Date(event.startDate).toLocaleDateString("en-SG", { day:"2-digit", month:"short", year:"numeric" }) %></span>
+          <span style="font-size:0.85rem;color:#6f7287;">
+            <%= new Date(event.startDate).toLocaleTimeString("en-SG", { hour:"2-digit", minute:"2-digit" }) %>
+            &ndash;
+            <%= new Date(event.endDate).toLocaleTimeString("en-SG", { hour:"2-digit", minute:"2-digit" }) %>
+          </span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Venue</span>
+          <span class="detail-value"><%= event.venue %></span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Capacity</span>
+          <span class="detail-value"><%= event.maxParticipants %> participants</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Organizer</span>
+          <span class="detail-value"><%= event.owner?.name || "Deleted User" %></span>
+        </div>
+
+        <% if (typeof currentUser !== 'undefined' && currentUser) { %>
+          <% const isOwner = event.owner && event.owner._id.toString() === currentUser.toString(); %>
+          <% if (!isOwner) { %>
+            <% if (userRsvp) { %>
+              <button type="button" class="btn-primary" disabled style="opacity:0.45;cursor:not-allowed;">RSVP'ed</button>
+            <% } else { %>
+              <button type="button" class="btn-primary" onclick="document.getElementById('customPrompt').style.display='flex'">
+                RSVP to this event
+              </button>
+
+              <div id="customPrompt" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; z-index:1000;">
+                
+                <div style="background:#fff; padding:24px; border-radius:8px; width:90%; max-width:350px; box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                  <h3 style="margin-top:0; margin-bottom:8px; color:#1e1b4b; font-size:1.2rem;">Special Requirements</h3>
+                  <p style="font-size:0.85rem; color:#6f7287; margin-bottom:16px;">Optional: e.g. special dietary, accessibility</p>
+                  
+                  <form action="/events/<%= event._id %>/rsvp" method="POST">
+                    
+                    <textarea 
+                      name="notes" 
+                      placeholder="Type your notes here..." 
+                      maxlength="100"
+                      oninput="document.getElementById('charCount').innerText = this.value.length + '/100'; document.getElementById('charCount').style.color = this.value.length >= 100 ? 'red' : '#6f7287';"
+                      style="width:100%; height:80px; padding:10px; margin-bottom:4px; border:1px solid #d1d5db; border-radius:6px; font-family:inherit; resize:none; box-sizing:border-box;"
+                    ></textarea>
+                    <div id="charCount" style="font-size:0.75rem; color:#6f7287; text-align:right; margin-bottom:16px;">
+                      0/100
+                    </div>
+                    <div style="display:flex; gap:12px;">
+                      <button type="button" onclick="document.getElementById('customPrompt').style.display='none'" style="flex:1; padding:10px; background:#f3f4f6; color:#374151; border:none; border-radius:6px; font-weight:600; cursor:pointer;">
+                        Cancel
+                      </button>
+                      <button type="submit" class="btn-primary" style="flex:1; padding:10px; border-radius:6px; border:none; font-weight:600; cursor:pointer;">
+                        Confirm RSVP
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+              </div>
+            <% } %>
+            <button
+              id="fav-btn"
+              type="button"
+              class="btn-outline"
+              style="margin-top:0.5rem;width:100%;"
+              data-event-id="<%= event._id %>"
+              data-favourited="<%= isFavourited ? 'true' : 'false' %>"
+            ><%= isFavourited ? 'Unfavourite' : 'Save to Favourites' %></button>
+          <% } else { %>
+            <button type="button" class="btn-primary" disabled style="opacity:0.45;cursor:not-allowed;">You own this event</button>
+            <div style="gap:0.5rem;margin-top:0.5rem;">
+              <% if (!isPast) { %>
+                <button type="button" class="btn-edit" style="flex:1;" onclick="location.href='/events/<%= event._id %>/edit'">Edit</button>
+              <% } %>
+              <form action="/events/<%= event._id %>/delete" method="POST" onsubmit="return confirm('Delete this event?');" style="flex:1;display:flex;">
+                <button type="submit" class="btn-danger" style="flex:1;">Delete</button>
+              </form>
+            </div>
+          <% } %>
+        <% } else { %>
+          <p style="font-size:0.875rem;color:#6f7287;margin-bottom:0.75rem;">Sign in to RSVP or save this event.</p>
+          <a href="/auth/login?returnTo=/events/<%= event._id %>" class="btn-primary" style="display:block;text-align:center;padding:0.65rem;border-radius:4px;text-decoration:none;font-weight:600;">Login to RSVP</a>
+        <% } %>
+
+      </div>
+    </div>
+
+  </div>
+
+  <a href="/events" class="event-back-link">&larr; Back to all events</a>
+
+</div>
+
+<!-- Favourite options modal (shown only when adding to favourites) -->
+<div id="fav-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:10px;padding:1.75rem;width:min(380px,92vw);box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+    <h3 style="margin:0 0 1.25rem;color:#1e1b4b;font-size:1.1rem;">Save to Favourites</h3>
+
+    <div style="margin-bottom:1.1rem;">
+      <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;font-size:0.95rem;">
+        <input type="checkbox" id="fav-reminder" style="width:16px;height:16px;accent-color:var(--eb-purple,#5b21b6);">
+        Remind me the day before this event
+      </label>
+    </div>
+
+    <div style="margin-bottom:1.5rem;">
+      <label for="fav-tag" style="display:block;font-weight:600;font-size:0.9rem;margin-bottom:0.4rem;">Tag <span style="font-weight:400;color:#6f7287;">(optional)</span></label>
+      <select id="fav-tag" style="width:100%;padding:0.5rem 0.75rem;border:1px solid #d1d5db;border-radius:6px;font-size:0.95rem;">
+        <option value="">No tag</option>
+        <option value="social">Social</option>
+        <option value="educational">Educational</option>
+        <option value="professional">Professional</option>
+      </select>
+    </div>
+
+    <div style="display:flex;gap:0.6rem;">
+      <button id="fav-modal-save" class="btn-primary" style="flex:1;">Save</button>
+      <button id="fav-modal-cancel" class="btn-outline" style="flex:1;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const favBtn = document.getElementById('fav-btn');
+  const favModal = document.getElementById('fav-modal');
+
+  if (favBtn) {
+    favBtn.addEventListener('click', () => {
+      if (favBtn.dataset.favourited === 'true') {
+        // Already favourited — unfavourite directly, no modal needed
+        doToggle(false, null);
+      } else {
+        // Not yet favourited — show options modal
+        document.getElementById('fav-reminder').checked = false;
+        document.getElementById('fav-tag').value = '';
+        favModal.style.display = 'flex';
+      }
+    });
+
+    document.getElementById('fav-modal-cancel').addEventListener('click', () => {
+      favModal.style.display = 'none';
+    });
+
+    // Close modal when clicking the backdrop
+    favModal.addEventListener('click', (e) => {
+      if (e.target === favModal) favModal.style.display = 'none';
+    });
+
+    document.getElementById('fav-modal-save').addEventListener('click', () => {
+      const reminder = document.getElementById('fav-reminder').checked;
+      const tag = document.getElementById('fav-tag').value;
+      favModal.style.display = 'none';
+      doToggle(reminder, tag);
+    });
+  }
+
+  async function doToggle(reminder, tag) {
+    const eventId = favBtn.dataset.eventId;
+    favBtn.disabled = true;
+    try {
+      const res = await fetch(`/events/${eventId}/favourites/toggle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reminder: reminder || false, tag: tag || '' }),
+      });
+      const data = await res.json();
+      favBtn.dataset.favourited = data.isFavourited ? 'true' : 'false';
+      favBtn.textContent = data.isFavourited ? 'Unfavourite' : 'Save to Favourites';
+    } catch (e) {
+      console.error(e);
+    } finally {
+      favBtn.disabled = false;
+    }
+  }
+</script>
+
+
+<%- include("../partials/footer") %>

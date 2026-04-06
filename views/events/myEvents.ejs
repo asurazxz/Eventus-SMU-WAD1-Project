@@ -1,0 +1,142 @@
+<%- include("../partials/header") %>
+
+<div class="rsvp-page">
+  <div class="section-header">
+    <h1>My RSVPs</h1>
+  </div>
+
+  <% if (upcoming.length === 0 && past.length === 0) { %>
+    <p style="color:#6f7287;">You have not RSVPed for any events yet. <a href="/events">Browse events</a></p>
+  <% } else { %>
+
+  <div class="rsvp-two-col">
+
+    <!-- Left: Upcoming -->
+    <div class="rsvp-col">
+      <h2 class="rsvp-col-heading">Upcoming / Ongoing</h2>
+      <% if (upcoming.length === 0) { %>
+        <p style="color:#6f7287;font-size:0.9rem;">No upcoming RSVPs.</p>
+      <% } %>
+      <% upcoming.forEach((rsvp, idx) => { %>
+        <div class="rsvp-card">
+          <div class="rsvp-card-top">
+            <div class="rsvp-card-left">
+              <h3><a href="/events/<%= rsvp.event._id %>"><%= rsvp.event.title %></a></h3>
+              <p class="rsvp-card-meta"><%= rsvp.event.venue %></p>
+              <p class="rsvp-card-meta">
+                <%= rsvp.event.startDate.toLocaleDateString("en-SG", { weekday:"short", day:"2-digit", month:"short", year:"numeric" }) %>
+                &nbsp;&bull;&nbsp;
+                <%= rsvp.event.startDate.toLocaleTimeString("en-SG", { hour:"2-digit", minute:"2-digit" }) %>
+                &ndash;
+                <%= rsvp.event.endDate.toLocaleTimeString("en-SG", { hour:"2-digit", minute:"2-digit" }) %>
+              </p>
+              <p class="rsvp-card-meta">
+                <%= parseFloat(((new Date(rsvp.event.endDate) - new Date(rsvp.event.startDate)) / 3600000).toFixed(1)) %> hours
+                &nbsp;&bull;&nbsp;
+                <%= rsvp.event.category %>
+              </p>
+              <p class="rsvp-card-meta">By <%= rsvp.event.owner?.name || "Unknown" %></p>
+                <% if (rsvp.notes) { %>
+                  <p class="rsvp-card-meta">Notes: <%= rsvp.notes %></p>
+                <% } %>
+            </div>
+            <div class="rsvp-card-right">
+              <% if (rsvp.status === 'confirmed') { %>
+                <span class="badge badge-green">Confirmed</span>
+              <% } else { %>
+                <span class="badge badge-gray">Waitlisted</span>
+              <% } %>
+              <form action="/events/<%= rsvp.event._id %>/cancel" method="POST" onsubmit="return confirm('Cancel your RSVP? This cannot be undone.')">
+                <button type="submit" class="btn-danger btn-sm">Cancel RSVP</button>
+              </form>
+            </div>
+          </div>
+
+          <% if (rsvp.status === 'confirmed') { %>
+          <div class="rsvp-qr-section">
+            <button class="rsvp-qr-toggle" onclick="toggleQr(this)" type="button">Show Check-In QR</button>
+            <div class="rsvp-qr-box">
+              <div id="qr-up-<%= idx %>" data-userid="<%= currentUser %>" data-eventid="<%= rsvp.event._id %>"></div>
+              <p class="rsvp-qr-hint">Show this QR code to the organiser on event day to check in</p>
+            </div>
+          </div>
+          <% } %>
+        </div>
+      <% }) %>
+    </div>
+
+    <!-- Right: Past -->
+    <div class="rsvp-col">
+      <h2 class="rsvp-col-heading">Past</h2>
+      <% if (past.length === 0) { %>
+        <p style="color:#6f7287;font-size:0.9rem;">No past RSVPs.</p>
+      <% } %>
+      <% past.forEach((rsvp) => { %>
+        <%
+          const checkedInAt = checkinMap[rsvp.event._id.toString()];
+        %>
+        <div class="rsvp-card rsvp-card-past">
+          <div class="rsvp-card-top">
+            <div class="rsvp-card-left">
+              <h3><a href="/events/<%= rsvp.event._id %>"><%= rsvp.event.title %></a></h3>
+              <p class="rsvp-card-meta"><%= rsvp.event.venue %></p>
+              <p class="rsvp-card-meta">
+                <%= rsvp.event.startDate.toLocaleDateString("en-SG", { weekday:"short", day:"2-digit", month:"short", year:"numeric" }) %>
+                &nbsp;&bull;&nbsp;
+                <%= rsvp.event.startDate.toLocaleTimeString("en-SG", { hour:"2-digit", minute:"2-digit" }) %>
+                &ndash;
+                <%= rsvp.event.endDate.toLocaleTimeString("en-SG", { hour:"2-digit", minute:"2-digit" }) %>
+              </p>
+              <p class="rsvp-card-meta">
+                <%= parseFloat(((new Date(rsvp.event.endDate) - new Date(rsvp.event.startDate)) / 3600000).toFixed(1)) %> hours
+                &nbsp;&bull;&nbsp;
+                <%= rsvp.event.category %>
+              </p>
+              <p class="rsvp-card-meta">By <%= rsvp.event.owner?.name || "Unknown" %></p>
+            </div>
+            <div class="rsvp-card-right">
+              <% if (checkedInAt) { %>
+                <span class="badge badge-green">Checked In</span>
+                <p style="font-size:0.75rem;color:#6f7287;margin-top:0.25rem;text-align:right;">
+                  <%= new Date(checkedInAt).toLocaleString("en-SG", { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" }) %>
+                </p>
+              <% } else { %>
+                <span class="badge badge-gray">Not Checked In</span>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+
+  </div>
+
+  <% } %>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+  function toggleQr(btn) {
+    const box = btn.nextElementSibling;
+    const opening = !box.classList.contains('visible');
+    box.classList.toggle('visible', opening);
+    btn.textContent = opening ? 'Hide QR Code' : 'Show Check-In QR';
+
+    if (opening) {
+      const container = box.querySelector('[data-userid]');
+      if (container && !container.dataset.generated) {
+        container.dataset.generated = '1';
+        new QRCode(container, {
+          text: container.dataset.userid + ':' + container.dataset.eventid,
+          width: 180,
+          height: 180,
+          colorDark: '#1e1b4b',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      }
+    }
+  }
+</script>
+
+<%- include("../partials/footer") %>

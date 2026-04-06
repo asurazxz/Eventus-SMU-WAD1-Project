@@ -1,0 +1,119 @@
+<%- include("../partials/header") %>
+<%- include("../dashboardPartials/header") %>
+
+<div class="participants-page">
+  <%
+    const confirmed = (participants || []).filter(p => p.status === "confirmed");
+    const waitlisted = (participants || []).filter(p => p.status === "waitlist");
+  %>
+  <div class="participants-event-info">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+      <div>
+        <h1><%= eventListing.title %></h1>
+        <p>
+          <%= new Date(eventListing.startDate).toLocaleString("en-SG", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" }) %>
+          <% if (eventListing.endDate) { %>
+            &ndash;
+            <%= new Date(eventListing.endDate).toLocaleString("en-SG", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" }) %>
+          <% } %>
+        </p>
+      </div>
+      <div style="text-align:right;white-space:nowrap;">
+        <span style="font-size:1.5rem;font-weight:700;color:var(--eb-orange);"><%= confirmed.length %> / <%= eventListing.maxParticipants %></span>
+        <div style="font-size:0.8rem;color:var(--eb-text-sec);margin-top:0.2rem;">RSVPs / Capacity</div>
+      </div>
+    </div>
+  </div>
+
+  <h2 style="margin-bottom:0.75rem;">Confirmed</h2>
+  <% if (confirmed.length === 0) { %>
+    <p style="color:#6f7287;margin-bottom:1.5rem;">None.</p>
+  <% } else { %>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>RSVP Time</th>
+          <th>Notes</th> <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% confirmed.forEach((participant, i) => { %>
+          <tr>
+            <td><%= i + 1 %></td>
+            <td><%= participant.user?.name || "Deleted User" %></td>
+            <td><%= participant.user?.email || "—" %></td>
+            <td style="font-size:0.85rem;color:#6f7287;">
+              <%= new Date(participant.createdAt).toLocaleString("en-SG", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" }) %>
+            </td>
+            <td>
+              <%= participant.notes ? participant.notes : '-' %>
+            </td>
+            <td>
+              <form
+                action="/dashboard/events/<%= eventListing._id %>/participants/<%= participant._id %>/delete"
+                method="POST"
+                onsubmit="return confirm('Remove this participant?');"
+              >
+                <button type="submit" class="btn-danger btn-sm">Remove</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+
+  <h2 style="margin-top:1.5rem;margin-bottom:0.75rem;">Waitlist</h2>
+  <% if (waitlisted.length === 0) { %>
+    <p style="color:#6f7287;margin-bottom:1.5rem;">None.</p>
+  <% } else { %>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>RSVP Time</th>
+          <th>Notes</th> <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% waitlisted.forEach((participant, i) => { %>
+          <tr>
+            <td><%= i + 1 %></td>
+            <td><%= participant.user?.name || "Deleted User" %></td>
+            <td><%= participant.user?.email || "—" %></td>
+            <td style="font-size:0.85rem;color:#6f7287;">
+              <%= new Date(participant.createdAt).toLocaleString("en-SG", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" }) %>
+            </td>
+            <td>
+              <%= participant.notes ? participant.notes : '-' %>
+            </td>
+            <td>
+              <div style="display:flex;gap:0.4rem;">
+                <form
+                  action="/dashboard/events/<%= eventListing._id %>/participants/<%= participant._id %>/promote"
+                  method="POST"
+                >
+                  <button type="submit" class="btn-sm">Promote</button>
+                </form>
+                <form
+                  action="/dashboard/events/<%= eventListing._id %>/participants/<%= participant._id %>/delete"
+                  method="POST"
+                  onsubmit="return confirm('Remove this participant?');"
+                >
+                  <button type="submit" class="btn-danger btn-sm">Remove</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</div>
+
+<%- include("../partials/footer") %>

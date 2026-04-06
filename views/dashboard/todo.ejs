@@ -1,0 +1,108 @@
+<%- include("../partials/header") %>
+<%- include("../dashboardPartials/header") %>
+
+<% const todayStr = new Date().toISOString().split('T')[0]; %>
+
+<div class="todo-page">
+  <div class="section-header">
+    <h1>To Do List</h1>
+  </div>
+
+  <% if (todos && todos.length > 0) { %>
+    <div class="todo-toolbar">
+      <form action="/dashboard/todo" method="GET" class="todo-sort-form">
+        <label for="todoSort">Sort by:</label>
+        <select name="todoSort" id="todoSort" onchange="this.form.submit()">
+          <option value="priority" <%= todoSort === "priority" ? "selected" : "" %>>Priority</option>
+          <option value="deadline" <%= todoSort === "deadline" ? "selected" : "" %>>Due Date</option>
+        </select>
+      </form>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Task</th>
+          <th>Deadline</th>
+          <th>Priority</th>
+          <th>Done</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% todos.forEach(todo => { %>
+          <tr>
+            <td style="<%= todo.status === 'completed' ? 'text-decoration:line-through;color:#6f7287;' : '' %>"><%= todo.title %></td>
+            <td style="font-size:0.85rem;color:#6f7287;">
+              <%= todo.deadline ? new Date(todo.deadline).toLocaleDateString("en-SG", { day:"2-digit", month:"short", year:"numeric" }) : '—' %>
+            </td>
+            <td>
+              <span class="priority-<%= todo.priority %>"><%= todo.priority.charAt(0).toUpperCase() + todo.priority.slice(1) %></span>
+            </td>
+            <td>
+              <form action="/todos/<%= todo._id %>/toggle" method="POST">
+                <input type="hidden" name="todoSort" value="<%= todoSort %>">
+                <input
+                  type="checkbox"
+                  name="status"
+                  <%= todo.status === "completed" ? "checked" : "" %>
+                  onchange="this.form.submit()"
+                >
+              </form>
+            </td>
+            <td>
+              <div style="display:flex;gap:0.4rem;">
+                <button type="button" class="btn-sm" onclick="location.href='/todos/<%= todo._id %>/edit?todoSort=<%= todoSort %>'">Edit</button>
+                <form action="/todos/<%= todo._id %>/delete" method="POST" onsubmit="return confirm('Delete this task?');" style="display:inline">
+                  <input type="hidden" name="todoSort" value="<%= todoSort %>">
+                  <button type="submit" class="btn-danger btn-sm">Delete</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } else { %>
+    <p style="color:#6f7287;margin-bottom:1.5rem;">No tasks yet. Add one below.</p>
+  <% } %>
+
+  <div class="todo-add-card">
+    <h2>Add New Task</h2>
+
+    <% if (typeof errors !== 'undefined' && errors) { %>
+      <div class="flash-message flash-error" style="background:#fde8e8;border:1px solid #f87171;color:#991b1b;padding:0.75rem 1rem;border-radius:4px;margin-bottom:1rem;">
+        <% if (errors.title) { %><div style="margin-bottom:0.25rem;"><%= errors.title %></div><% } %>
+        <% if (errors.priority) { %><div style="margin-bottom:0.25rem;"><%= errors.priority %></div><% } %>
+        <% if (errors.deadline) { %><div><%= errors.deadline %></div><% } %>
+      </div>
+    <% } %>
+
+    <form action="/todos/create" method="POST">
+      <input type="hidden" name="todoSort" value="<%= todoSort %>">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="title">Task</label>
+          <input type="text" id="title" name="title" value="<%= typeof formData !== 'undefined' && formData ? formData.title : '' %>" placeholder="What needs to be done?" required>
+        </div>
+        <div class="form-group">
+          <label for="priority">Priority</label>
+          <select id="priority" name="priority" required>
+            <option value="" disabled selected>Select Priority</option>
+            <option value="high" <%= typeof formData !== 'undefined' && formData && formData.priority === 'high' ? 'selected' : '' %>>High</option>
+            <option value="medium" <%= typeof formData !== 'undefined' && formData && formData.priority === 'medium' ? 'selected' : '' %>>Medium</option>
+            <option value="low" <%= typeof formData !== 'undefined' && formData && formData.priority === 'low' ? 'selected' : '' %>>Low</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="deadline">Deadline</label>
+        <input type="date" id="deadline" name="deadline" value="<%= typeof formData !== 'undefined' && formData ? formData.deadline : '' %>" min="<%= todayStr %>" required>
+      </div>
+      <button type="submit" class="btn-primary">Add Task</button>
+    </form>
+  </div>
+
+</div>
+
+<%- include("../partials/footer") %>

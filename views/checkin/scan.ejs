@@ -1,0 +1,203 @@
+<%- include("../partials/header") %>
+
+<%
+  const { totalRsvps, checkedInCount, newRsvpsToday, newCheckinsToday } = stats;
+
+  const errorMessages = {
+    missing: "Please enter a name or email.",
+    notfound: "No user found with that name or email.",
+    norsvp: "This person doesn't have a confirmed RSVP.",
+    already:"This person has already been checked in.",
+  };
+  const errorMsg = errorMessages[query?.error] || null;
+
+  function formatDate(d) {
+    return new Date(d).toLocaleDateString("en-SG", {
+      day: "numeric", month: "short", year: "numeric",
+      hour: "2-digit", minute: "2-digit"
+    });
+  }
+
+  const pct = totalRsvps > 0 ? Math.round(checkedInCount / totalRsvps * 100) : 0;
+  const countAll = attendees.length;
+  const countPending = attendees.filter(p => p.status === "Pending").length;
+  const countChecked = attendees.filter(p => p.status === "Checked-In").length;
+  const countWaitlist = attendees.filter(p => p.status === "Waitlist").length;
+%>
+
+<div id="toast-container" class="toast-container"></div>
+
+<% if (errorMsg) { %>
+  <div class="flash flash-error js-legacy-banner" style="margin:1rem 1.5rem 0;">
+    ⚠️ <%= errorMsg %>
+  </div>
+<% } %>
+
+<div class="checkin-layout">
+
+  <!-- Left: Event info + RSVP table -->
+  <div class="checkin-col-main">
+
+    <!-- Event info card -->
+    <div class="checkin-info">
+      <p class="checkin-info-label">Event Check-In</p>
+      <h1><%= event.title %></h1>
+      <p class="checkin-info-meta">
+        📍 <%= event.venue %> &nbsp;
+        🗓 <%= formatDate(event.startDate) %> &nbsp;
+        🏷 <%= event.category %> &nbsp;
+        👥 Max <%= event.maxParticipants %>
+      </p>
+      <p class="checkin-info-stats">
+        <%= totalRsvps %> registered &nbsp;|&nbsp;
+        <span id="stat-checkedin"><%= checkedInCount %>/<%= totalRsvps %></span> checked in
+        <% if (newCheckinsToday > 0) { %> (+<%= newCheckinsToday %> today)<% } %>
+      </p>
+      <div class="checkin-progress-wrap">
+        <div class="checkin-progress-track">
+          <div class="checkin-progress-bar" id="progress-bar" style="width:<%= pct %>%"></div>
+        </div>
+        <span class="checkin-progress-label" id="progress-pct"><%= pct %>%</span>
+      </div>
+    </div>
+
+    <!-- RSVP table panel -->
+    <div class="checkin-table-panel">
+
+      <div class="checkin-table-header">
+        <h2>All RSVPs</h2>
+        <div class="checkin-search-row">
+          <input id="search-input" type="text" placeholder="Search…" />
+          <a href="/checkin/<%= eventId %>/export">↓ Export</a>
+        </div>
+      </div>
+
+      <div id="filter-tabs" class="filter-tabs">
+        <button class="ftab active" data-filter="all">All (<%= countAll %>)</button>
+        <button class="ftab" data-filter="Pending">Pending (<%= countPending %>)</button>
+        <button class="ftab" data-filter="Checked-In">Checked-In (<%= countChecked %>)</button>
+        <% if (countWaitlist > 0) { %>
+          <button class="ftab" data-filter="Waitlist">Waitlist (<%= countWaitlist %>)</button>
+        <% } %>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Check-In Time</th>
+            <th>Status</th>
+            <th>Owner Notes</th>
+            <th class="col-action">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="rsvp-tbody">
+          <% if (attendees.length === 0) { %>
+            <tr>
+              <td colspan="5" style="text-align:center;padding:2rem;">
+                No RSVPs found<% if (searchQuery) { %> for "<%= searchQuery %>"<% } %>.
+              </td>
+            </tr>
+          <% } %>
+          <% attendees.forEach(person => { %>
+            <tr
+              data-user-id="<%= person.userId %>"
+              data-name="<%= person.name %>"
+              data-email="<%= person.email %>"
+              data-status="<%= person.status %>"
+              data-checkin-iso="<%= person.checkInIso || '' %>"
+              data-owner-notes="<%= (person.ownerNotes || '').replace(/"/g, '&quot;') %>"
+            >
+              <td>
+                <strong><%= person.name %></strong><br>
+                <small><%= person.email %></small>
+                <% if (person.rsvpNotes) { %>
+                  <br><small style="color:#6f7287;font-style:italic;word-break:break-word;overflow-wrap:break-word;">RSVP note: <%= person.rsvpNotes %></small>
+                <% } %>
+              </td>
+              <td data-col="time"><%= person.checkInTime %></td>
+              <td data-col="status"><span><%= person.status %></span></td>
+              <td data-col="owner-notes" style="min-width:160px;">
+                <div class="owner-notes-display" style="font-size:0.82rem;color:#374151;margin-bottom:0.3rem;">
+                  <%- person.ownerNotes ? person.ownerNotes : '<span style="color:#9ca3af;">—</span>' %>
+                </div>
+                <button type="button" class="js-edit-notes-btn btn-sm" data-user-id="<%= person.userId %>" style="font-size:0.75rem;">Edit Notes</button>
+                <div class="owner-notes-edit" style="display:none;margin-top:0.4rem;">
+                  <textarea class="owner-notes-input" rows="2" maxlength="500" style="width:100%;font-size:0.82rem;border:1px solid #d1d5db;border-radius:4px;padding:4px;resize:vertical;box-sizing:border-box;"><%= person.ownerNotes || '' %></textarea>
+                  <div style="display:flex;gap:4px;margin-top:4px;">
+                    <button type="button" class="js-save-notes-btn btn-sm" data-user-id="<%= person.userId %>" style="font-size:0.75rem;">Save</button>
+                    <button type="button" class="js-cancel-notes-btn btn-sm" style="font-size:0.75rem;background:#f3f4f6;color:#374151;">Cancel</button>
+                  </div>
+                </div>
+              </td>
+              <td class="col-action" data-col="action">
+                <% if (person.status === "Checked-In") { %>
+                  <button type="button" class="js-edit-time-btn" data-user-id="<%= person.userId %>">Edit Time</button>
+                  <button type="button" class="js-withdraw-btn" data-user-id="<%= person.userId %>">Withdraw</button>
+                <% } else if (person.status === "Waitlist") { %>
+                  <button type="button" class="js-rsvp-btn" data-user-id="<%= person.userId %>" data-new-status="confirmed">↑ Confirm</button>
+                  <button type="button" class="js-checkin-btn" data-user-id="<%= person.userId %>">Check In</button>
+                <% } else { %>
+                  <button type="button" class="js-rsvp-btn" data-user-id="<%= person.userId %>" data-new-status="waitlist">→ Waitlist</button>
+                  <button type="button" class="js-checkin-btn" data-user-id="<%= person.userId %>">Check In</button>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+
+      <div class="checkin-table-footer">
+        <span>Showing <span id="showing-range">1–<%= Math.min(5, attendees.length) %></span> of <span id="showing-total"><%= attendees.length %></span> attendees</span>
+        <div id="pagination-controls"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: QR scanner panel -->
+  <div class="checkin-col-scanner">
+    <h2>QR Scanner</h2>
+
+    <button id="scan-btn" type="button" onclick="startQrScanner()">
+      <span id="scan-btn-label">Scan QR Code</span>
+    </button>
+
+    <div id="qr-container" class="qr-container">
+      <div id="qr-preview" class="qr-preview">Camera inactive</div>
+      <video id="qr-video" autoplay playsinline></video>
+      <canvas id="qr-overlay"></canvas>
+    </div>
+
+    <div id="qr-status" class="qr-status-box"></div>
+
+    <hr>
+
+    <form id="manual-form">
+      <input
+        id="manual-identifier"
+        type="text"
+        name="identifier"
+        placeholder="Name or email address"
+        required
+      />
+      <button type="submit">Check In</button>
+    </form>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+<!-- Server-injected values required by qrcode.js -->
+<script>
+  const EVENT_ID = '<%- eventId %>';
+  let currentCheckedIn = <%- checkedInCount %>;
+  const totalRsvpsJs = <%- totalRsvps %>;
+  document.querySelectorAll('.js-legacy-banner').forEach(el => el.style.display = 'none');
+</script>
+<script src="/js/qrcode.js"></script>
+
+<script src="/js/checkin.js"></script>
+
+<%- include("../partials/footer") %>

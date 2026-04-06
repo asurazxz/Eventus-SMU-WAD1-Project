@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav>
+    <a href="/" class="nav-brand">Eventus</a>
+
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+
+    <div class="nav-links" id="nav-links">
+      <% if (typeof currentUser !== 'undefined' && currentUser) { %>
+        <a href="/events/new">Create Event</a>
+        <a href="/events/my">My RSVPs</a>
+        <a href="/favourites">Favourites</a>
+        <% if (hasOwnedEvents) { %>
+          <a href="/dashboard">Dashboard & Check-In</a>
+        <% } %>
+        <div class="nav-right">
+          <a href="/profile" class="nav-user">Hi, <%= currentUserName %></a>
+          <form action="/auth/logout" method="POST" style="display:inline;">
+            <button type="submit" class="nav-link">Logout</button>
+          </form>
+        </div>
+      <% } else { %>
+        <div class="nav-right">
+          <a href="/auth/login" class="nav-btn-login">Login</a>
+          <a href="/auth/signup" class="nav-btn-signup">Sign Up</a>
+        </div>
+      <% } %>
+    </div>
+  </nav>
+  <% if ((typeof success !== 'undefined' && success && success.length > 0) || (typeof error !== 'undefined' && error && error.length > 0) || (typeof info !== 'undefined' && info && info.length > 0)) { %>
+  <div class="flash-wrapper">
+    <%- include("./flashMessage") %>
+  </div>
+  <% } %>
+  <main>

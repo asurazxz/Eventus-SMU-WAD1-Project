@@ -1,0 +1,47 @@
+<% if (typeof success !== 'undefined' && success && success.length > 0) { %>
+  <% success.forEach(function(msg) { %>
+    <div class="flash flash-success" role="alert">
+      <span><%= msg %></span>
+      <button class="flash-close" aria-label="Dismiss">&times;</button>
+    </div>
+  <% }) %>
+<% } %>
+
+<% if (typeof error !== 'undefined' && error && error.length > 0) { %>
+  <% error.forEach(function(msg) { %>
+    <div class="flash flash-error" role="alert">
+      <span><%= msg %></span>
+      <button class="flash-close" aria-label="Dismiss">&times;</button>
+    </div>
+  <% }) %>
+<% } %>
+
+<% if (typeof info !== 'undefined' && info && info.length > 0) { %>
+  <% info.forEach(function(msg) { %>
+    <div class="flash flash-info" role="alert">
+      <span><%= msg %></span>
+      <button class="flash-close" aria-label="Dismiss">&times;</button>
+    </div>
+  <% }) %>
+<% } %>
+
+<script>
+  (function () {
+    var wrapper = document.querySelector('.flash-wrapper');
+
+    function removeFlash(el) {
+      el.remove();
+      if (wrapper && wrapper.querySelectorAll('.flash').length === 0) {
+        wrapper.remove();
+      }
+    }
+
+    document.querySelectorAll('.flash-close').forEach(function (btn) {
+      btn.addEventListener('click', function () { removeFlash(btn.closest('.flash')); });
+    });
+
+    document.querySelectorAll('.flash').forEach(function (el) {
+      setTimeout(function () { removeFlash(el); }, 4400);
+    });
+  })();
+</script>

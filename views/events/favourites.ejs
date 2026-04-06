@@ -1,0 +1,261 @@
+<%- include("../partials/header") %>
+
+<%
+  const now = new Date();
+  const upcomingFavs = favourites.filter(f => f.event && new Date(f.event.endDate) >= now);
+  const pastFavs = favourites.filter(f => f.event && new Date(f.event.endDate) < now);
+
+  const TAG_LABEL = { social: "Social", educational: "Educational", professional: "Professional" };
+  const TAG_CLASS = { social: "badge-blue", educational: "badge-green", professional: "badge-purple" };
+%>
+
+<div class="fav-page">
+  <div class="section-header">
+    <h1>My Favourites</h1>
+    <a href="/events">Browse more events</a>
+  </div>
+
+  <% if (favourites.length === 0) { %>
+    <p style="color:#6f7287;">You haven't saved any events yet. <a href="/events">Browse events</a></p>
+  <% } else { %>
+
+    <!-- Upcoming & Ongoing -->
+    <h2 style="margin-bottom:0.75rem;">Upcoming &amp; Ongoing (<%= upcomingFavs.length %>)</h2>
+
+    <% if (upcomingFavs.length === 0) { %>
+      <p style="color:#6f7287;margin-bottom:2rem;font-size:0.9rem;">No upcoming saved events.</p>
+    <% } else { %>
+
+      <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;">
+        <span style="font-size:0.85rem;color:#6f7287;margin-right:0.25rem;">Filter by tag:</span>
+        <button class="ftab active" onclick="filterFavs('all',this)">All (<%= upcomingFavs.length %>)</button>
+        <button class="ftab" onclick="filterFavs('social',this)">Social (<%= upcomingFavs.filter(f=>f.tag==='social').length %>)</button>
+        <button class="ftab" onclick="filterFavs('educational',this)">Educational (<%= upcomingFavs.filter(f=>f.tag==='educational').length %>)</button>
+        <button class="ftab" onclick="filterFavs('professional',this)">Professional (<%= upcomingFavs.filter(f=>f.tag==='professional').length %>)</button>
+        <button class="ftab" onclick="filterFavs('__none',this)">Untagged (<%= upcomingFavs.filter(f=>!f.tag).length %>)</button>
+      </div>
+
+      <div id="upcoming-favs">
+        <% upcomingFavs.forEach(fav => { %>
+          <% const rsvpStatus = rsvpMap[fav.event._id.toString()]; %>
+          <div class="fav-card" data-tag="<%= fav.tag || '' %>">
+
+            <div class="fav-card-header">
+              <div style="flex:1;">
+
+                <!-- Badge row: category, tag select, reminder toggle — each clearly labelled -->
+                <div class="fav-card-badges">
+
+                  <span class="fav-badge-group">
+                    <span class="fav-badge-label">Category</span>
+                    <span class="badge badge-orange"><%= fav.event.category %></span>
+                  </span>
+
+                  <span class="fav-badge-group">
+                    <span class="fav-badge-label">Tag</span>
+                    <select
+                      class="fav-tag-select js-tag-select"
+                      data-fav-id="<%= fav._id %>"
+                    >
+                      <option value="" <%= !fav.tag ? 'selected' : '' %>>No tag</option>
+                      <option value="social" <%= fav.tag === 'social' ? 'selected' : '' %>>Social</option>
+                      <option value="educational" <%= fav.tag === 'educational' ? 'selected' : '' %>>Educational</option>
+                      <option value="professional" <%= fav.tag === 'professional' ? 'selected' : '' %>>Professional</option>
+                    </select>
+                  </span>
+
+                  <button
+                    type="button"
+                    class="js-reminder-btn reminder-toggle <%= fav.reminder ? 'reminder-toggle--on' : 'reminder-toggle--off' %>"
+                    data-fav-id="<%= fav._id %>"
+                    data-reminder="<%= fav.reminder ? 'true' : 'false' %>"
+                    title="<%= fav.reminder ? 'Click to turn reminder off' : 'Click to turn reminder on' %>"
+                  ><%= fav.reminder ? '🔔 Reminder: ON' : '🔕 Reminder: OFF' %></button>
+
+                </div>
+
+                <h2><a href="/events/<%= fav.event._id %>"><%= fav.event.title %></a></h2>
+              </div>
+              <% if (rsvpStatus === 'confirmed') { %>
+                <span class="badge badge-green" style="align-self:flex-start;">RSVP: Confirmed</span>
+              <% } else if (rsvpStatus === 'waitlist') { %>
+                <span class="badge badge-gray" style="align-self:flex-start;">RSVP: Waitlisted</span>
+              <% } %>
+            </div>
+
+            <div class="fav-card-body">
+              <div class="fav-card-details">
+                <p class="fav-card-meta"><strong>Venue:</strong> <%= fav.event.venue %></p>
+                <p class="fav-card-meta"><strong>Start:</strong> <%= new Date(fav.event.startDate).toLocaleString("en-SG", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" }) %></p>
+                <p class="fav-card-meta"><strong>End:</strong> <%= new Date(fav.event.endDate).toLocaleString("en-SG", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" }) %></p>
+                <p class="fav-card-meta"><strong>Capacity:</strong> <%= fav.event.maxParticipants %> participants</p>
+                <p class="fav-card-meta"><strong>Organizer:</strong> <%= fav.event.owner?.name || "Deleted User" %></p>
+              </div>
+              <div class="fav-card-notes">
+                <form action="/favourites/<%= fav._id %>/notes" method="POST">
+                  <label for="notes-<%= fav._id %>">My Notes</label>
+                  <textarea id="notes-<%= fav._id %>" name="notes" rows="3" maxlength="500"><%= fav.notes %></textarea>
+                  <div style="font-size:0.75rem;color:#6f7287;margin-top:0.25rem;">Max 500 characters</div>
+                  <button type="submit" class="btn-primary btn-sm" style="margin-top:0.5rem;">Save Notes</button>
+                </form>
+              </div>
+            </div>
+
+            <div class="fav-card-actions">
+              <% if (!rsvpStatus) { %>
+                <form action="/events/<%= fav.event._id %>/rsvp" method="POST">
+                  <button type="submit" class="btn-primary btn-sm">RSVP</button>
+                </form>
+              <% } %>
+              <form action="/favourites/<%= fav._id %>/delete" method="POST">
+                <button type="submit" class="btn-danger btn-sm">Remove</button>
+              </form>
+            </div>
+
+          </div>
+        <% }) %>
+      </div>
+
+    <% } %>
+
+    <% if (pastFavs.length > 0) { %>
+      <h2 style="margin-top:2rem;margin-bottom:0.75rem;">Past (<%= pastFavs.length %>)</h2>
+      <% pastFavs.forEach(fav => { %>
+        <% const rsvpStatus = rsvpMap[fav.event._id.toString()]; %>
+        <div class="fav-card fav-card-past">
+
+          <div class="fav-card-header">
+            <div style="flex:1;">
+
+              <div class="fav-card-badges">
+                <span class="fav-badge-group">
+                  <span class="fav-badge-label">Category</span>
+                  <span class="badge badge-orange"><%= fav.event.category %></span>
+                </span>
+                <% if (fav.tag) { %>
+                  <span class="fav-badge-group">
+                    <span class="fav-badge-label">Tag</span>
+                    <span class="badge <%= TAG_CLASS[fav.tag] || 'badge-gray' %>"><%= TAG_LABEL[fav.tag] %></span>
+                  </span>
+                <% } %>
+              </div>
+
+              <h2><a href="/events/<%= fav.event._id %>"><%= fav.event.title %></a></h2>
+            </div>
+            <% if (rsvpStatus === 'confirmed') { %>
+              <span class="badge badge-green" style="align-self:flex-start;">RSVP: Confirmed</span>
+            <% } else if (rsvpStatus === 'waitlist') { %>
+              <span class="badge badge-gray" style="align-self:flex-start;">RSVP: Waitlisted</span>
+            <% } %>
+          </div>
+
+          <div class="fav-card-body">
+            <div class="fav-card-details">
+              <p class="fav-card-meta"><strong>Venue:</strong> <%= fav.event.venue %></p>
+              <p class="fav-card-meta"><strong>Start:</strong> <%= new Date(fav.event.startDate).toLocaleString("en-SG", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" }) %></p>
+              <p class="fav-card-meta"><strong>End:</strong> <%= new Date(fav.event.endDate).toLocaleString("en-SG", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" }) %></p>
+              <p class="fav-card-meta"><strong>Organizer:</strong> <%= fav.event.owner?.name || "Deleted User" %></p>
+            </div>
+            <div class="fav-card-notes">
+              <form action="/favourites/<%= fav._id %>/notes" method="POST">
+                <label for="notes-past-<%= fav._id %>">My Notes</label>
+                <textarea id="notes-past-<%= fav._id %>" name="notes" rows="3" maxlength="500"><%= fav.notes %></textarea>
+                <div style="font-size:0.75rem;color:#6f7287;margin-top:0.25rem;">Max 500 characters</div>
+                <button type="submit" class="btn-primary btn-sm" style="margin-top:0.5rem;">Save Notes</button>
+              </form>
+            </div>
+          </div>
+
+          <div class="fav-card-actions">
+            <form action="/favourites/<%= fav._id %>/delete" method="POST">
+              <button type="submit" class="btn-danger btn-sm">Remove</button>
+            </form>
+          </div>
+
+        </div>
+      <% }) %>
+    <% } %>
+
+  <% } %>
+</div>
+
+<script>
+  function filterFavs(tag, btn) {
+    document.querySelectorAll('.ftab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('#upcoming-favs .fav-card').forEach(card => {
+      if (tag === 'all') {
+        card.style.display = '';
+      } else if (tag === '__none') {
+        card.style.display = (!card.dataset.tag) ? '' : 'none';
+      } else {
+        card.style.display = (card.dataset.tag === tag) ? '' : 'none';
+      }
+    });
+  }
+
+  function showToast(msg, type) {
+    const t = document.createElement('div');
+    t.className = 'flash flash-' + (type || 'success');
+    t.role = 'alert';
+    t.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;min-width:220px;max-width:340px;box-shadow:0 4px 16px rgba(0,0,0,0.12);';
+    t.innerHTML = '<span>' + msg + '</span><button class="flash-close" onclick="this.parentElement.remove()" aria-label="Dismiss">&times;</button>';
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 4400);
+  }
+
+  // Reminder toggle
+  document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.js-reminder-btn');
+    if (!btn) return;
+    btn.disabled = true;
+    try {
+      const favId = btn.dataset.favId;
+      const res = await fetch(`/favourites/${favId}/reminder`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        btn.dataset.reminder = data.reminder ? 'true' : 'false';
+        btn.textContent = data.reminder ? '🔔 Reminder: ON' : '🔕 Reminder: OFF';
+        btn.title = data.reminder ? 'Click to turn reminder off' : 'Click to turn reminder on';
+        btn.classList.toggle('reminder-toggle--on', data.reminder);
+        btn.classList.toggle('reminder-toggle--off', !data.reminder);
+        showToast(data.reminder ? 'Reminder set for this event.' : 'Reminder removed.', 'success');
+      } else {
+        showToast('Failed to update reminder.', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Something went wrong.', 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // Tag select — AJAX save on change
+  document.addEventListener('change', async (e) => {
+    const sel = e.target.closest('.js-tag-select');
+    if (!sel) return;
+    const favId = sel.dataset.favId;
+    const tag = sel.value;
+    try {
+      const res = await fetch(`/favourites/${favId}/tag`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tag }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const card = sel.closest('.fav-card');
+        if (card) card.dataset.tag = tag;
+        showToast('Tag updated.', 'success');
+      } else {
+        showToast('Failed to update tag.', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Something went wrong.', 'error');
+    }
+  });
+</script>
+
+<%- include("../partials/footer") %>

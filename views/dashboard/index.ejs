@@ -1,0 +1,62 @@
+<%- include("../partials/header") %>
+<%- include("../dashboardPartials/header") %>
+
+<section class="dashboard-page">
+  <h1>Owner Dashboard</h1>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value"><%= stats.totalEvents || 0 %></div>
+      <div class="stat-label">Total Events</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value"><%= stats.totalUpcomingEvents || 0 %></div>
+      <div class="stat-label">Upcoming Events</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value"><%= stats.totalRSVPs || 0 %></div>
+      <div class="stat-label">Upcoming RSVPs</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value"><%= stats.waitlistCount || 0 %></div>
+      <div class="stat-label">Upcoming Waitlist</div>
+    </div>
+  </div>
+
+  <div class="upcoming-card">
+    <h2>Owned Top Upcoming Events (by RSVPs)</h2>
+    <% if (topUpcoming && topUpcoming.length) { %>
+      <ol class="top-upcoming-list">
+        <% topUpcoming.forEach(ev => { %>
+          <li>
+            <a href="/events/<%= ev.id %>?from=dashboard"><%= ev.title %></a>
+            — <strong><%= ev.count %></strong> RSVP<%= ev.count === 1 ? '' : 's' %>
+            <% if (ev.startDate) { %> &bull; <span class="upcoming-date"><%= new Date(ev.startDate).toLocaleDateString("en-SG", { day:"2-digit", month:"short", year:"numeric"}) %></span><% } %>
+          </li>
+        <% }) %>
+      </ol>
+    <% } else { %>
+      <p class="empty-state">No upcoming events with RSVPs.</p>
+    <% } %>
+  </div>
+
+  <h2>Recent Activity</h2>
+  <% if (!recentActivity || recentActivity.length === 0) { %>
+    <p>No recent activity.</p>
+  <% } else { %>
+    <div class="activity-list">
+      <% recentActivity.forEach(activity => { %>
+        <div class="activity-card">
+          <p class="activity-text">
+            <strong><%= activity.userName %></strong>
+            <%= activity.actionText %>
+            <span class="activity-event"><%= activity.eventTitle %></span>
+          </p>
+          <span class="activity-time"><%= activity.timeAgo %></span>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</section>
+
+<%- include("../partials/footer") %>

@@ -1,0 +1,68 @@
+<%- include("../partials/header") %>
+<% const minDateStr = new Date(Date.now() + 86400000).toISOString().split('T')[0] + 'T00:00' %>
+
+<div class="event-form-page">
+  <div class="event-form-card">
+    <h1>Create Event</h1>
+
+    <% if (errors.length > 0) { %>
+      <div class="form-error-list">
+        <ul>
+          <% errors.forEach(err => { %><li><%= err %></li><% }) %>
+        </ul>
+      </div>
+    <% } %>
+
+    <form action="/events" method="POST">
+
+      <div class="form-group">
+        <label for="title">Event Title</label>
+        <input type="text" id="title" name="title" value="<%= formData.title || '' %>" placeholder="Name your event" required>
+      </div>
+
+      <div class="form-group">
+        <label for="venue">Venue</label>
+        <input type="text" id="venue" name="venue" value="<%= formData.venue || '' %>" placeholder="Where is it happening?" required>
+      </div>
+
+      <div class="form-group">
+        <label for="category">Category</label>
+        <select id="category" name="category" required>
+          <option value="">-- Select a Category --</option>
+          <% categories.forEach(cat => { %>
+            <option value="<%= cat %>" <%= formData.category === cat ? 'selected' : '' %>><%= cat %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description</label>
+        <textarea id="description" name="description" placeholder="Tell people what to expect..." required><%= formData.description || '' %></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="startDate">Start Date &amp; Time</label>
+          <input type="datetime-local" id="startDate" name="startDate" min="<%= minDateStr %>" value="<%= formData.startDate || '' %>" required>
+        </div>
+        <div class="form-group">
+          <label for="endDate">End Date &amp; Time</label>
+          <input type="datetime-local" id="endDate" name="endDate" min="<%= minDateStr %>" value="<%= formData.endDate || '' %>" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="maxParticipants">Max Participants</label>
+        <input type="number" id="maxParticipants" name="maxParticipants" value="<%= formData.maxParticipants || '' %>" placeholder="e.g. 100" min="1" required>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">Create Event</button>
+        <a href="/events" style="display:flex;align-items:center;justify-content:center;border:1px solid #dbdae3;border-radius:4px;font-size:0.9rem;font-weight:600;color:#1e0a3c;text-decoration:none;padding:0.5rem 1.125rem;">Cancel</a>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<%- include("../partials/footer") %>

@@ -1,0 +1,105 @@
+<%- include("../partials/header") %>
+<%- include("../dashboardPartials/header") %>
+
+<div class="section-header">
+  <h1>My Events</h1>
+  <button type="button" class="btn-primary" onclick="location.href='/events/new'">+ Create Event</button>
+</div>
+
+
+
+<% if (ongoingEvents.length > 0) { %>
+  <h2>Ongoing Events</h2>
+  <div class="events-scroll">
+    <div class="events-list">
+      <% ongoingEvents.forEach(event => { %>
+        <div class="event-card">
+          <div class="event-details">
+            <h3><%= event.title %></h3>
+            <p>
+              <%= new Date(event.startDate).toLocaleString("en-SG", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" }) %>
+              <% if (event.endDate) { %>
+                &ndash;
+                <%= new Date(event.endDate).toLocaleString("en-SG", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" }) %>
+              <% } %>
+            </p>
+            <p><%= event.venue %> &bull; <span class="badge badge-orange"><%= event.category %></span></p>
+            <p>Capacity: <%= event.maxParticipants %> &bull; <strong><%= event.rsvpCount || 0 %> RSVPs</strong></p>
+          </div>
+          <div class="event-actions">
+            <button type="button" onclick="location.href='/dashboard/events/<%= event.id %>/participants'">RSVPs</button>
+            <button type="button" onclick="location.href='/events/<%= event.id %>'">View</button>
+            <button type="button" onclick="location.href='/events/<%= event.id %>/edit'">Edit</button>
+            <button type="button" class="btn-primary" onclick="location.href='/checkin/<%= event.id %>'">Check-In</button>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+<% } %>
+
+<h2>Upcoming Events</h2>
+
+<% if (!upcomingEvents || upcomingEvents.length === 0) { %>
+  <p style="color:#6f7287;margin-bottom:1.5rem;">No upcoming events.</p>
+<% } else { %>
+  <div class="events-scroll">
+    <div class="events-list">
+      <% upcomingEvents.forEach(event => { %>
+        <div class="event-card">
+          <div class="event-details">
+            <h3><%= event.title %></h3>
+            <p>
+              <%= new Date(event.startDate).toLocaleString("en-SG", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" }) %>
+              <% if (event.endDate) { %>
+                &ndash;
+                <%= new Date(event.endDate).toLocaleString("en-SG", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" }) %>
+              <% } %>
+            </p>
+            <p><%= event.venue %> &bull; <span class="badge badge-orange"><%= event.category %></span></p>
+            <p>Capacity: <%= event.maxParticipants %> &bull; <strong><%= event.rsvpCount || 0 %> RSVPs</strong></p>
+          </div>
+          <div class="event-actions">
+            <button type="button" onclick="location.href='/dashboard/events/<%= event.id %>/participants'">RSVPs</button>
+            <button type="button" onclick="location.href='/events/<%= event.id %>'">View</button>
+            <button type="button" onclick="location.href='/events/<%= event.id %>/edit'">Edit</button>
+            <button type="button" class="btn-primary" onclick="location.href='/checkin/<%= event.id %>'">Check-In</button>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+<% } %>
+
+<h2 style="margin-top:1.5rem;">Past Events</h2>
+
+<% if (!pastEvents || pastEvents.length === 0) { %>
+  <p style="color:#6f7287;">No past events.</p>
+<% } else { %>
+  <div class="events-scroll">
+    <div class="events-list">
+      <% pastEvents.forEach(event => { %>
+        <div class="event-card">
+          <div class="event-details">
+            <h3 style="color:#6f7287;"><%= event.title %></h3>
+            <p>
+              <%= new Date(event.startDate).toLocaleString("en-SG", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" }) %>
+              <% if (event.endDate) { %>
+                &ndash;
+                <%= new Date(event.endDate).toLocaleString("en-SG", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" }) %>
+              <% } %>
+            </p>
+            <p><%= event.venue %> &bull; <span class="badge badge-gray"><%= event.category %></span></p>
+            <p>Capacity: <%= event.maxParticipants %> &bull; <strong><%= event.rsvpCount || 0 %> RSVPs</strong></p>
+          </div>
+          <div class="event-actions">
+            <button type="button" onclick="location.href='/dashboard/events/<%= event.id %>/attendance'">Attendance</button>
+            <button type="button" onclick="location.href='/events/<%= event.id %>'">View</button>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+<% } %>
+
+<%- include("../partials/footer") %>

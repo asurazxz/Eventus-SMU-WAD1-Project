@@ -1,0 +1,55 @@
+<%- include("../partials/header") %>
+<%- include("../dashboardPartials/header") %>
+
+<% const todayStr = new Date().toISOString().split('T')[0]; %>
+
+<div class="todo-edit-page">
+  <div class="todo-edit-card">
+    <h1>Edit Task</h1>
+
+    <% if (typeof errors !== 'undefined' && errors) { %>
+      <div class="flash-message flash-error" style="background:#fde8e8;border:1px solid #f87171;color:#991b1b;padding:0.75rem 1rem;border-radius:4px;margin-bottom:1rem;">
+        <% if (errors.title) { %><div style="margin-bottom:0.25rem;"><%= errors.title %></div><% } %>
+        <% if (errors.priority) { %><div style="margin-bottom:0.25rem;"><%= errors.priority %></div><% } %>
+        <% if (errors.deadline) { %><div><%= errors.deadline %></div><% } %>
+      </div>
+    <% } %>
+
+    <form action="/todos/<%= todo._id %>/update" method="POST">
+
+      <div class="form-group">
+        <label for="title">Task</label>
+        <input type="text" id="title" name="title" value="<%= todo.title %>" required>
+      </div>
+
+      <div class="form-group">
+        <label for="priority">Priority Level</label>
+        <select id="priority" name="priority" required>
+          <option value="high"<%= todo.priority === "high" ? " selected" : "" %>>High</option>
+          <option value="medium"<%= todo.priority === "medium" ? " selected" : "" %>>Medium</option>
+          <option value="low"<%= todo.priority === "low" ? " selected" : "" %>>Low</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="deadline">Deadline</label>
+        <input
+          type="date"
+          id="deadline"
+          name="deadline"
+          value="<%= todo.deadline ? new Date(todo.deadline).toISOString().split('T')[0] : '' %>"
+          min="<%= todayStr %>"
+          required
+        >
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">Save Changes</button>
+        <a href="/dashboard/todo" style="display:flex;align-items:center;justify-content:center;border:1px solid #dbdae3;border-radius:4px;font-size:0.9rem;font-weight:600;color:#1e0a3c;text-decoration:none;padding:0.5rem 1.125rem;">Cancel</a>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<%- include("../partials/footer") %>
