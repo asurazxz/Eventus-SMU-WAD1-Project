@@ -32,7 +32,7 @@ Part of AY2025/2026 IS113 WAD1 Group Project to demonstrate understanding of web
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/asurazxz/WAD1-Project-Group-4.git
+git clone https://github.com/asurazxz/Eventus-SMU-WAD1-Project.git
 cd WAD1-Project-Group-4
 ```
 
