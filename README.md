@@ -1,7 +1,7 @@
 # Eventus — SMU IS113 WAD1 Group 4 Project
 
 An event management platform built with Node.js, Express, MongoDB, and EJS.
-Part of AY2025/2026 IS113 WAD1 Group Project.
+Part of AY2025/2026 IS113 WAD1 Group Project to demonstrate understanding of web applications using JavaScript and database CRUD 
 
 **Course**: IS113 Web Application Development 1 — Group 4
 - Group members:
@@ -13,6 +13,20 @@ Part of AY2025/2026 IS113 WAD1 Group Project.
   - Chen Jianxin https://github.com/cjianxin
 
 ---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Runtime | Node.js 18+ |
+| Framework | Express.js 5.2.1 |
+| Database | MongoDB Atlas (Mongoose 9.3.0) |
+| Templating | EJS 5 |
+| Auth | bcryptjs 3.0.3, express-session, connect-flash |
+| Validation | express-validator |
+
+---
+
 ## Setup
 
 ### 1. Clone the repository
@@ -153,19 +167,6 @@ In accordance with the IS113 project guidelines, the following parts of this pro
 | Post-merge integration | Bug fixes, MVC refactoring, and cross-feature wiring after merging all branches |
 
 Core business logic, route design, schema design, authentication system, and form validation were implemented independently by each team member.
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| Runtime | Node.js 18+ |
-| Framework | Express.js 5.2.1 |
-| Database | MongoDB Atlas (Mongoose 9.3.0) |
-| Templating | EJS 5 |
-| Auth | bcryptjs 3.0.3, express-session, connect-flash |
-| Validation | express-validator |
 
 ---
 
